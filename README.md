@@ -118,19 +118,62 @@ claude-enterprise -p "hello" # mode headless
 
 ## Configuration Auth0
 
-1. **Créer une API** (APIs → Create API) : audience `https://claude-proxy.corp.example.com/api`, RS256, activer offline_access
-2. **Créer une Application Native** : activer le grant type "Device Code"
-3. **Connecter Okta** comme Enterprise Connection (si applicable)
-4. **Ajouter une Action Post-Login** pour injecter le rôle dans le JWT :
+### 1. Créer une API
+
+APIs → Create API :
+- Identifier (audience) : `https://claude-proxy.corp.example.com/api`
+- Signing Algorithm : RS256
+- Activer "Allow Offline Access"
+
+### 2. Créer une Application Native
+
+Applications → Create Application → Native :
+- Activer le grant type **Device Code** (Settings → Advanced → Grant Types)
+- Noter le **Client ID** (sera distribué aux développeurs)
+
+### 3. Créer les rôles RBAC
+
+User Management → Roles → Create Role :
+
+| Rôle | Description | Quota Anthropic |
+|------|-------------|-----------------|
+| `developer` | Développeurs | Standard |
+| `tech-lead` | Tech leads | Élevé |
+| `po` | Product owners | Limité |
+
+Assigner les rôles aux utilisateurs : User Management → Users → sélectionner → Roles → Assign Roles
+
+### 4. Connecter Okta (si applicable)
+
+Authentication → Enterprise → Okta Workforce Identity Cloud.
+Les groupes Okta peuvent être mappés vers les rôles Auth0 via des Actions.
+
+### 5. Ajouter une Action Post-Login
+
+Actions → Flows → Login → Add Action → Custom :
 
 ```javascript
 exports.onExecutePostLogin = async (event, api) => {
   const ns = 'https://claude-proxy.corp.example.com/api';
+
   api.accessToken.setCustomClaim(`${ns}/email`, event.user.email);
-  api.accessToken.setCustomClaim(`${ns}/role`,
-    event.user.app_metadata?.claude_role || 'developer');
+
+  // Utilise les rôles RBAC natifs d'Auth0
+  const roles = event.authorization?.roles || [];
+  let claudeRole = 'default';
+  if (roles.includes('tech-lead')) claudeRole = 'tech-lead';
+  else if (roles.includes('developer')) claudeRole = 'developer';
+  else if (roles.includes('po')) claudeRole = 'po';
+
+  api.accessToken.setCustomClaim(`${ns}/role`, claudeRole);
 };
 ```
+
+### 6. Token TTL
+
+APIs → votre API → Settings :
+- Access Token Lifetime : 3600s (1h)
+- Refresh Token Lifetime : 2592000s (30j), avec rotation activée
 
 ## Développement
 
