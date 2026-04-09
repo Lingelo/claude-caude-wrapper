@@ -1,0 +1,22 @@
+{
+  "name": "claude-code-enterprise",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Enterprise Claude Code proxy with Auth0/Okta authentication and role-based API key routing",
+  "workspaces": [
+    "packages/proxy",
+    "packages/cli"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "dev:proxy": "npm run dev -w packages/proxy",
+    "dev:cli": "npm run dev -w packages/cli",
+    "test": "npm test --workspaces",
+    "lint": "eslint packages/*/src/**/*.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.4.0"
+  }
+}

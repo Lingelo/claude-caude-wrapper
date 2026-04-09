@@ -1,0 +1,27 @@
+node_modules/
+dist/
+*.js.map
+*.d.ts
+!packages/*/src/**/*.d.ts
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Database
+data/
+*.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
