@@ -1,10 +1,16 @@
 import { spawn } from "node:child_process";
+import { logStep, logDetail, logSuccess } from "./ui.js";
 
 export function spawnClaude(
   proxyUrl: string,
   accessToken: string,
   args: string[]
 ): Promise<number> {
+  logStep("proxy", "Connecting through enterprise proxy");
+  logDetail(`Proxy: ${proxyUrl}`);
+  logStep("launch", "Launching Claude Code...");
+  console.log();
+
   return new Promise((resolve, reject) => {
     const child = spawn("claude", args, {
       stdio: "inherit",

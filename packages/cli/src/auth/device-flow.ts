@@ -1,5 +1,7 @@
+import chalk from "chalk";
 import type { CliConfig } from "../config.js";
 import { saveTokens, type StoredTokens } from "./token-store.js";
+import { logStep, logDetail, logSuccess } from "../ui.js";
 
 interface DeviceCodeResponse {
   device_code: string;
@@ -30,6 +32,8 @@ function sleep(ms: number): Promise<void> {
 export async function deviceFlowLogin(
   config: CliConfig
 ): Promise<StoredTokens> {
+  logStep("token", "Requesting device code from Auth0...");
+
   // Step 1: Request device code
   const codeResponse = await fetch(
     `https://${config.auth0Domain}/oauth/device/code`,
@@ -53,27 +57,37 @@ export async function deviceFlowLogin(
 
   // Step 2: Display instructions and open browser
   console.log();
-  console.log("  To authenticate, please visit:");
-  console.log(`  ${deviceCode.verification_uri_complete}`);
+  console.log(chalk.bgBlue.white.bold("  AUTHENTICATION REQUIRED  "));
   console.log();
-  console.log(`  Or open ${deviceCode.verification_uri} and enter code: ${deviceCode.user_code}`);
+  console.log(`  Open this URL in your browser:`);
+  console.log(`  ${chalk.cyan.underline(deviceCode.verification_uri_complete)}`);
   console.log();
-  console.log("  Waiting for authorization...");
+  console.log(`  Or go to ${chalk.cyan(deviceCode.verification_uri)} and enter:`);
+  console.log(`  Code: ${chalk.bold.yellow(deviceCode.user_code)}`);
+  console.log();
 
   // Try to open browser
   try {
     const open = (await import("open")).default;
     await open(deviceCode.verification_uri_complete);
+    logDetail("Browser opened automatically");
   } catch {
-    // Browser open failed — user will manually navigate
+    logDetail("Could not open browser — please navigate manually");
   }
+
+  logStep("auth", "Waiting for authorization...");
 
   // Step 3: Poll for token
   let interval = deviceCode.interval * 1000;
   const deadline = Date.now() + deviceCode.expires_in * 1000;
+  let dots = 0;
 
   while (Date.now() < deadline) {
     await sleep(interval);
+
+    // Animated waiting indicator
+    dots = (dots + 1) % 4;
+    process.stdout.write(`\r     ${chalk.dim("waiting" + ".".repeat(dots) + " ".repeat(3 - dots))}`);
 
     const tokenResponse = await fetch(
       `https://${config.auth0Domain}/oauth/token`,
@@ -89,6 +103,7 @@ export async function deviceFlowLogin(
     );
 
     if (tokenResponse.ok) {
+      process.stdout.write("\r     \r"); // Clear waiting line
       const data = (await tokenResponse.json()) as TokenResponse;
       const now = Math.floor(Date.now() / 1000);
 
@@ -101,8 +116,6 @@ export async function deviceFlowLogin(
       };
 
       saveTokens(tokens);
-      console.log("  Authenticated successfully!");
-      console.log();
       return tokens;
     }
 
@@ -110,25 +123,26 @@ export async function deviceFlowLogin(
 
     switch (error.error) {
       case "authorization_pending":
-        // Continue polling
         break;
       case "slow_down":
         interval += 5000;
         break;
       case "expired_token":
-        throw new Error(
-          "Device code expired. Please try again."
-        );
+        process.stdout.write("\r     \r");
+        throw new Error("Device code expired. Please try again.");
       case "access_denied":
+        process.stdout.write("\r     \r");
         throw new Error(
           "Authorization was denied. Please contact your administrator."
         );
       default:
+        process.stdout.write("\r     \r");
         throw new Error(
           `Authentication failed: ${error.error_description ?? error.error}`
         );
     }
   }
 
+  process.stdout.write("\r     \r");
   throw new Error("Device code expired. Please try again.");
 }
