@@ -114,7 +114,46 @@ claude-enterprise -p "hello" # mode headless
 | `claude-enterprise configure` | Configure Auth0 et proxy URL |
 | `claude-enterprise login` | S'authentifier via Auth0 device flow |
 | `claude-enterprise logout` | Effacer les tokens locaux |
-| `claude-enterprise status` | Afficher la configuration actuelle |
+| `claude-enterprise status` | Afficher la configuration et l'état du token |
+| `claude-enterprise setup-path` | Crée un alias shell (`cc` par défaut) |
+
+### Alias rapide
+
+Après configuration, créez un alias pour lancer Claude Code plus rapidement :
+
+```bash
+claude-enterprise setup-path            # crée l'alias 'cc'
+claude-enterprise setup-path --alias ce # ou un alias personnalisé
+```
+
+Ensuite :
+```bash
+cc              # lance Claude Code via le proxy
+cc -p "hello"   # mode headless
+cc status       # vérifier la config
+```
+
+### Affichage au lancement
+
+Le CLI affiche un banner et des logs étape par étape :
+
+```
+   _____ _                 _        _____          _
+  / ____| |               | |      / ____|        | |
+ | |    | | __ _ _   _  __| | ___ | |     ___   __| | ___
+ | |    | |/ _` | | | |/ _` |/ _ \| |    / _ \ / _` |/ _ \
+ | |____| | (_| | |_| | (_| |  __/| |___| (_) | (_| |  __/
+  \_____|_|\__,_|\__,_|\__,_|\___| \_____\___/ \__,_|\___|
+  ───────────────────────────────────────────────────────
+  Enterprise Edition  |  Auth0/Okta Authentication
+
+  ⚙ Loading configuration...
+     Proxy: https://proxy.corp.example.com
+  🔐 Checking authentication...
+  ✓ Token valid (expires in 47 min)
+  ⇄ Connecting through enterprise proxy
+  ▶ Launching Claude Code...
+```
 
 ## Configuration Auth0
 
