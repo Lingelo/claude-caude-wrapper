@@ -72,3 +72,10 @@ CLI commands: `configure`, `login`, `logout`, `status`, `run` (default — forwa
 - All imports use `.js` extensions (ESM requirement for Node16 module resolution)
 - User identity flows as `UserContext` type (sub/email/role) attached to Fastify request after auth
 - The proxy never parses or modifies the message body — it forwards raw bytes and only extracts `model`/`stream` from request and `usage` from response
+
+## Active Technologies
+- TypeScript 5.7 (API routes), vanilla JS ES2022 (frontend — no build step) + Fastify 5.2, `@fastify/static` (new), `@auth0/auth0-spa-js` (CDN), Chart.js 4.x (CDN), better-sqlite3 11.7 (existing) (001-usage-dashboard)
+- Existing SQLite `usage_log` table (read-only access, no schema changes) (001-usage-dashboard)
+
+## Recent Changes
+- 001-usage-dashboard: Added TypeScript 5.7 (API routes), vanilla JS ES2022 (frontend — no build step) + Fastify 5.2, `@fastify/static` (new), `@auth0/auth0-spa-js` (CDN), Chart.js 4.x (CDN), better-sqlite3 11.7 (existing)

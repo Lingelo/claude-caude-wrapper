@@ -19,6 +19,7 @@ const configSchema = z.object({
     .url()
     .default("https://api.anthropic.com"),
   roleKeysConfig: z.string().min(1),
+  auth0DashboardClientId: z.string().min(1).optional(),
 });
 
 export type Config = z.infer<typeof configSchema> & {
@@ -54,6 +55,7 @@ export function loadConfig(): Config {
     rateLimitRpm: process.env.RATE_LIMIT_RPM,
     anthropicUpstreamUrl: process.env.ANTHROPIC_UPSTREAM_URL,
     roleKeysConfig: process.env.ROLE_KEYS_CONFIG,
+    auth0DashboardClientId: process.env.AUTH0_DASHBOARD_CLIENT_ID,
   });
 
   const roleKeys = loadRoleKeys(parsed.roleKeysConfig);
