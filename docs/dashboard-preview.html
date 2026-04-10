@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Preview — Claude Enterprise</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+/* === Inline all styles for standalone preview === */
+:root {
+  --color-bg: #f8f9fc;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f1f3f9;
+  --color-border: #e2e5ed;
+  --color-text: #1a1d26;
+  --color-text-secondary: #6b7085;
+  --color-text-muted: #9ca0b0;
+  --color-primary: #6366f1;
+  --color-primary-hover: #4f46e5;
+  --color-primary-light: #eef2ff;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --chart-input: #6366f1;
+  --chart-output: #10b981;
+  --chart-cache-create: #f59e0b;
+  --chart-cache-read: #06b6d4;
+  --chart-grid: #e2e5ed;
+  --chart-text: #6b7085;
+  --space-xs: 0.25rem; --space-sm: 0.5rem; --space-md: 1rem;
+  --space-lg: 1.5rem; --space-xl: 2rem; --space-2xl: 3rem;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --text-xs: 0.75rem; --text-sm: 0.875rem; --text-base: 1rem;
+  --text-lg: 1.125rem; --text-xl: 1.25rem; --text-2xl: 1.5rem;
+  --radius-sm: 0.375rem; --radius-md: 0.5rem; --radius-lg: 0.75rem;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+  --max-width: 1400px;
+}
+[data-theme="dark"] {
+  --color-bg: #0f1117; --color-surface: #1a1d2e; --color-surface-hover: #252840;
+  --color-border: #2d3148; --color-text: #e8eaf0; --color-text-secondary: #9ca0b8;
+  --color-text-muted: #6b708a; --color-primary: #818cf8; --color-primary-hover: #6366f1;
+  --color-primary-light: #1e1b4b; --chart-grid: #2d3148; --chart-text: #9ca0b8;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.3);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); color: var(--color-text); background: var(--color-bg); -webkit-font-smoothing: antialiased; }
+.container { max-width: var(--max-width); margin: 0 auto; padding: 0 var(--space-lg); }
+.header { background: var(--color-surface); border-bottom: 1px solid var(--color-border); padding: var(--space-md) 0; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow-sm); }
+.header-inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); flex-wrap: wrap; }
+.header-brand h1 { font-size: var(--text-lg); font-weight: 600; }
+.header-actions { display: flex; align-items: center; gap: var(--space-sm); flex-wrap: wrap; }
+.user-info { display: flex; align-items: center; gap: var(--space-sm); font-size: var(--text-sm); color: var(--color-text-secondary); }
+.role-badge { display: inline-block; padding: var(--space-xs) var(--space-sm); border-radius: var(--radius-sm); font-size: var(--text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; background: var(--color-primary-light); color: var(--color-primary); }
+.view-switcher { display: flex; background: var(--color-bg); border-radius: var(--radius-md); padding: 2px; gap: 2px; }
+.view-switcher button { padding: var(--space-xs) var(--space-md); border: none; border-radius: var(--radius-sm); background: transparent; color: var(--color-text-secondary); font-size: var(--text-sm); font-weight: 500; cursor: pointer; transition: all 0.15s; }
+.view-switcher button.active { background: var(--color-surface); color: var(--color-text); box-shadow: var(--shadow-sm); }
+.btn { display: inline-flex; align-items: center; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text); font-size: var(--text-sm); font-weight: 500; cursor: pointer; }
+.btn:hover { background: var(--color-surface-hover); }
+.btn-primary { background: var(--color-primary); color: white; border-color: var(--color-primary); }
+.btn-icon { padding: var(--space-sm); border: none; background: transparent; color: var(--color-text-secondary); cursor: pointer; border-radius: var(--radius-sm); font-size: var(--text-lg); }
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md); margin-bottom: var(--space-xl); }
+.card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-lg); box-shadow: var(--shadow-sm); }
+.card-label { font-size: var(--text-sm); color: var(--color-text-secondary); font-weight: 500; margin-bottom: var(--space-xs); }
+.card-value { font-size: var(--text-2xl); font-weight: 700; font-variant-numeric: tabular-nums; }
+.chart-container { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-lg); box-shadow: var(--shadow-sm); margin-bottom: var(--space-xl); }
+.chart-container h3 { font-size: var(--text-base); font-weight: 600; margin-bottom: var(--space-md); }
+.chart-wrapper { position: relative; width: 100%; min-height: 280px; }
+.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); margin-bottom: var(--space-xl); }
+.date-picker { display: flex; align-items: center; gap: var(--space-sm); flex-wrap: wrap; margin-bottom: var(--space-xl); }
+.date-picker input[type="date"] { padding: var(--space-sm) var(--space-md); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text); font-size: var(--text-sm); font-family: var(--font-sans); }
+.date-presets { display: flex; gap: var(--space-xs); }
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-lg); }
+.section-header h2 { font-size: var(--text-xl); font-weight: 600; }
+.table-container { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; margin-bottom: var(--space-xl); }
+.table-container h3 { font-size: var(--text-base); font-weight: 600; padding: var(--space-lg) var(--space-lg) var(--space-md); }
+.data-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.data-table th { text-align: left; padding: var(--space-sm) var(--space-lg); font-weight: 600; color: var(--color-text-secondary); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--color-border); }
+.data-table td { padding: var(--space-sm) var(--space-lg); border-bottom: 1px solid var(--color-border); font-variant-numeric: tabular-nums; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: var(--color-surface-hover); }
+.dashboard-content { padding: var(--space-xl) 0; }
+@media (max-width: 768px) { .charts-row { grid-template-columns: 1fr; } .cards-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .cards-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container header-inner">
+      <div class="header-brand"><h1>Claude Usage Dashboard</h1></div>
+      <div class="header-actions">
+        <div class="view-switcher">
+          <button class="active" onclick="showView('personal')">My Usage</button>
+          <button onclick="showView('admin')">Team Overview</button>
+        </div>
+        <div class="user-info">
+          <span>alice@company.com</span>
+          <span class="role-badge">tech-lead</span>
+        </div>
+        <button class="btn-icon" onclick="toggleDarkMode()" id="theme-btn">🌙</button>
+        <button class="btn">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container dashboard-content">
+    <!-- Date picker -->
+    <div class="date-picker">
+      <input type="date" value="2026-04-01">
+      <span style="color:var(--color-text-muted)">to</span>
+      <input type="date" value="2026-04-10">
+      <div class="date-presets">
+        <button class="btn">This month</button>
+        <button class="btn">Last 30 days</button>
+        <button class="btn">Last 90 days</button>
+      </div>
+    </div>
+
+    <!-- Personal view -->
+    <div id="personal-view">
+      <div class="cards-grid">
+        <div class="card"><div class="card-label">Input Tokens</div><div class="card-value" style="color:var(--chart-input)">1.2M</div></div>
+        <div class="card"><div class="card-label">Output Tokens</div><div class="card-value" style="color:var(--chart-output)">845K</div></div>
+        <div class="card"><div class="card-label">Cache Creation</div><div class="card-value" style="color:var(--chart-cache-create)">89.5K</div></div>
+        <div class="card"><div class="card-label">Cache Read</div><div class="card-value" style="color:var(--chart-cache-read)">234K</div></div>
+        <div class="card"><div class="card-label">Requests</div><div class="card-value" style="color:var(--color-primary)">342</div></div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-container">
+          <h3>Daily Token Usage</h3>
+          <div class="chart-wrapper"><canvas id="daily-chart"></canvas></div>
+        </div>
+        <div class="chart-container">
+          <h3>Usage by Model</h3>
+          <div class="chart-wrapper"><canvas id="model-chart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin view -->
+    <div id="admin-view" style="display:none">
+      <div class="section-header">
+        <h2>Team Overview</h2>
+        <button class="btn btn-primary">Export CSV</button>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card"><div class="card-label">Total Input</div><div class="card-value">18.5M</div></div>
+        <div class="card"><div class="card-label">Total Output</div><div class="card-value">12.3M</div></div>
+        <div class="card"><div class="card-label">Cache Creation</div><div class="card-value">350K</div></div>
+        <div class="card"><div class="card-label">Cache Read</div><div class="card-value">1.2M</div></div>
+        <div class="card"><div class="card-label">Active Users</div><div class="card-value">23</div></div>
+        <div class="card"><div class="card-label">Total Requests</div><div class="card-value">5.4K</div></div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-container">
+          <h3>Usage by Role</h3>
+          <div class="chart-wrapper"><canvas id="role-chart"></canvas></div>
+        </div>
+        <div class="chart-container">
+          <h3>Usage Trend</h3>
+          <div class="chart-wrapper"><canvas id="trend-chart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <h3>Top Users by Consumption</h3>
+        <table class="data-table">
+          <thead><tr><th>#</th><th>User</th><th>Role</th><th>Total Tokens</th><th>Input</th><th>Output</th><th>Cache Create</th><th>Requests</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>bob@company.com</td><td><span class="role-badge">tech-lead</span></td><td>8.2M</td><td>5.1M</td><td>3.1M</td><td>120K</td><td>1,204</td></tr>
+            <tr><td>2</td><td>alice@company.com</td><td><span class="role-badge">developer</span></td><td>5.3M</td><td>3.2M</td><td>2.1M</td><td>89K</td><td>842</td></tr>
+            <tr><td>3</td><td>charlie@company.com</td><td><span class="role-badge">developer</span></td><td>3.8M</td><td>2.4M</td><td>1.4M</td><td>65K</td><td>623</td></tr>
+            <tr><td>4</td><td>diana@company.com</td><td><span class="role-badge">po</span></td><td>1.9M</td><td>1.2M</td><td>0.7M</td><td>32K</td><td>287</td></tr>
+            <tr><td>5</td><td>eve@company.com</td><td><span class="role-badge">developer</span></td><td>1.1M</td><td>0.7M</td><td>0.4M</td><td>18K</td><td>156</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const days = ['Apr 1','Apr 2','Apr 3','Apr 4','Apr 5','Apr 6','Apr 7','Apr 8','Apr 9','Apr 10'];
+    const s = getComputedStyle(document.documentElement);
+
+    // Daily chart
+    new Chart(document.getElementById('daily-chart'), {
+      type: 'line',
+      data: {
+        labels: days,
+        datasets: [
+          { label: 'Input', data: [120000,145000,98000,167000,134000,189000,156000,201000,178000,142000], borderColor: '#6366f1', backgroundColor: '#6366f120', fill: true, tension: 0.3 },
+          { label: 'Output', data: [85000,102000,67000,118000,94000,132000,109000,141000,125000,99000], borderColor: '#10b981', backgroundColor: '#10b98120', fill: true, tension: 0.3 },
+        ],
+      },
+      options: { responsive: true, maintainAspectRatio: false, interaction: { intersect: false, mode: 'index' },
+        plugins: { legend: { position: 'top', labels: { color: '#6b7085' } } },
+        scales: { x: { ticks: { color: '#6b7085' }, grid: { color: '#e2e5ed' } }, y: { ticks: { color: '#6b7085', callback: v => v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v }, grid: { color: '#e2e5ed' } } }
+      },
+    });
+
+    // Model chart
+    new Chart(document.getElementById('model-chart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['claude-sonnet-4-6', 'claude-opus-4-6', 'claude-haiku-4-5'],
+        datasets: [{ data: [890000, 520000, 180000], backgroundColor: ['#6366f1','#10b981','#f59e0b'], borderWidth: 0 }],
+      },
+      options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'right', labels: { color: '#6b7085', padding: 12 } } }
+      },
+    });
+
+    // Role chart
+    new Chart(document.getElementById('role-chart'), {
+      type: 'bar',
+      data: {
+        labels: ['developer', 'tech-lead', 'po'],
+        datasets: [
+          { label: 'Input', data: [9800000, 5100000, 1200000], backgroundColor: '#6366f1' },
+          { label: 'Output', data: [6500000, 3100000, 700000], backgroundColor: '#10b981' },
+        ],
+      },
+      options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+        plugins: { legend: { position: 'top', labels: { color: '#6b7085' } } },
+        scales: { x: { stacked: true, ticks: { color: '#6b7085', callback: v => v>=1e6?(v/1e6).toFixed(0)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v }, grid: { color: '#e2e5ed' } }, y: { stacked: true, ticks: { color: '#6b7085' }, grid: { display: false } } }
+      },
+    });
+
+    // Trend chart
+    new Chart(document.getElementById('trend-chart'), {
+      type: 'line',
+      data: {
+        labels: days,
+        datasets: [
+          { label: 'Input', data: [620000,780000,540000,890000,720000,950000,810000,1020000,880000,710000], borderColor: '#6366f1', backgroundColor: '#6366f120', fill: true, tension: 0.3, yAxisID: 'y' },
+          { label: 'Output', data: [410000,520000,360000,590000,480000,630000,540000,680000,590000,470000], borderColor: '#10b981', backgroundColor: '#10b98120', fill: true, tension: 0.3, yAxisID: 'y' },
+          { label: 'Active Users', data: [15,18,12,21,17,23,19,22,20,16], borderColor: '#06b6d4', borderDash: [5,5], fill: false, tension: 0.3, yAxisID: 'y1' },
+        ],
+      },
+      options: { responsive: true, maintainAspectRatio: false, interaction: { intersect: false, mode: 'index' },
+        plugins: { legend: { position: 'top', labels: { color: '#6b7085' } } },
+        scales: {
+          x: { ticks: { color: '#6b7085' }, grid: { color: '#e2e5ed' } },
+          y: { position: 'left', ticks: { color: '#6b7085', callback: v => v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v }, grid: { color: '#e2e5ed' } },
+          y1: { position: 'right', ticks: { color: '#6b7085' }, grid: { drawOnChartArea: false } },
+        }
+      },
+    });
+
+    // View switching
+    function showView(view) {
+      document.getElementById('personal-view').style.display = view === 'personal' ? '' : 'none';
+      document.getElementById('admin-view').style.display = view === 'admin' ? '' : 'none';
+      document.querySelectorAll('.view-switcher button').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+
+    // Dark mode
+    function toggleDarkMode() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+      document.getElementById('theme-btn').textContent = isDark ? '🌙' : '☀️';
+    }
+  </script>
+</body>
+</html>
