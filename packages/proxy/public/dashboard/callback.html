@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Authenticating...</title>
+  <script src="https://cdn.jsdelivr.net/npm/@auth0/auth0-spa-js@2/dist/auth0-spa-js.production.min.js"></script>
+</head>
+<body>
+  <div id="message" style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:system-ui">
+    <p>Completing authentication...</p>
+  </div>
+  <script>
+    (async () => {
+      try {
+        const config = window.__DASHBOARD_CONFIG__ || {};
+        const client = await auth0.createAuth0Client({
+          domain: config.auth0Domain,
+          clientId: config.auth0ClientId,
+          authorizationParams: {
+            audience: config.auth0Audience,
+            redirect_uri: window.location.origin + '/dashboard/callback',
+          },
+        });
+        await client.handleRedirectCallback();
+        window.location.replace('/dashboard');
+      } catch (err) {
+        const params = new URLSearchParams(window.location.search);
+        const error = params.get('error');
+        const desc = params.get('error_description');
+        document.getElementById('message').innerHTML =
+          '<div style="text-align:center">' +
+          '<h2>Authentication failed</h2>' +
+          '<p>' + (desc || error || err.message) + '</p>' +
+          '<a href="/dashboard">Try again</a>' +
+          '</div>';
+      }
+    })();
+  </script>
+</body>
+</html>

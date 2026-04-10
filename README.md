@@ -25,6 +25,24 @@ Claude Code supporte nativement ce pattern via :
 - `ANTHROPIC_BASE_URL` — redirige les appels API vers le proxy
 - `ANTHROPIC_AUTH_TOKEN` — envoyé comme `Authorization: Bearer` sur chaque requête
 
+## Dashboard
+
+Le proxy inclut un dashboard web pour visualiser la consommation de tokens par utilisateur, rôle et modèle.
+
+### Vue personnelle — "My Usage"
+
+![Dashboard Personal View](docs/dashboard-personal.png)
+
+Chaque utilisateur voit sa propre consommation : tokens input/output, cache creation/read, breakdown par jour et par modèle.
+
+### Vue admin — "Team Overview"
+
+![Dashboard Admin View](docs/dashboard-admin.png)
+
+Les admins (role `tech-lead`) voient la consommation agrégée par rôle, le classement des utilisateurs, les tendances, et peuvent exporter en CSV.
+
+**Setup** : Nécessite une application Auth0 SPA (voir `AUTH0_DASHBOARD_CLIENT_ID` dans les variables d'environnement). Le dashboard est servi automatiquement à `/dashboard`.
+
 ## Composants
 
 | Package | Description |
@@ -236,6 +254,7 @@ npm run lint               # ESLint
 | `RATE_LIMIT_RPM` | Non | `60` | Requêtes/min par utilisateur |
 | `ANTHROPIC_UPSTREAM_URL` | Non | `https://api.anthropic.com` | URL upstream (utile pour les tests) |
 | `LOG_LEVEL` | Non | `info` | Niveau de log (fatal/error/warn/info/debug/trace) |
+| `AUTH0_DASHBOARD_CLIENT_ID` | Non | — | Client ID de l'application Auth0 SPA pour le dashboard |
 
 ## Endpoints du proxy
 
@@ -244,6 +263,9 @@ npm run lint               # ESLint
 | `POST` | `/v1/messages` | JWT | Proxy vers Anthropic Messages API (streaming + non-streaming) |
 | `POST` | `/v1/messages/count_tokens` | JWT | Proxy vers token counting |
 | `GET` | `/health` | Non | Health check |
+| `GET` | `/dashboard` | Non | Dashboard SPA (Auth0 PKCE côté client) |
+| `GET` | `/api/dashboard/me/*` | JWT | Usage personnel (summary, daily, models) |
+| `GET` | `/api/dashboard/admin/*` | JWT (admin) | Usage agrégé (summary, users, trend, export CSV) |
 
 ## Licence
 
